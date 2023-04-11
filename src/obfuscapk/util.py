@@ -32,7 +32,7 @@ class_pattern = re.compile(r"\.class.+?(?P<class_name>\S+?;)", re.UNICODE)
 super_class_pattern = re.compile(r"\.super\s(?P<class_name>\S+?;)", re.UNICODE)
 
 # .locals <number>
-locals_pattern = re.compile(r"\s+\.locals\s(?P<local_count>\d+)")
+locals_pattern = re.compile(r"\s+\.locals\s+(?P<local_count>\d+)")
 
 # .field <other_optional_stuff> <field_name>:<field_type> <optional_initialization>
 field_pattern = re.compile(
@@ -234,6 +234,12 @@ def get_dangerous_api() -> List[str]:
 def get_nop_valid_op_codes() -> List[str]:
     return get_non_empty_lines_from_file(
         os.path.join(os.path.dirname(__file__), "resources", "nop_valid_op_codes.txt")
+    )
+
+
+def get_dead_code_valid_op_codes() -> List[str]:
+    return get_non_empty_lines_from_file(
+        os.path.join(os.path.dirname(__file__), "resources", "dead_code_valid_op_codes.txt")
     )
 
 

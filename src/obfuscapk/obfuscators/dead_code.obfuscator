@@ -1,0 +1,7 @@
+[Core]
+Name = DeadCode
+Module = dead_code
+
+[Documentation]
+Description = Add dead codes between instructions
+Version = 1.0
