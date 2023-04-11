@@ -460,6 +460,11 @@ functionality.
 > [:page_facing_up: ConstStringEncryption source code](https://github.com/ClaudiuGeorgiu/Obfuscapk/tree/master/src/obfuscapk/obfuscators/const_string_encryption)
 </details>
 
+<details><summary><b>DeadCode</b> [Code]</summary>
+
+> Insert junk code. Randomly insert *const/4* operations within every method implementation.  
+> [:page_facing_up: DeadCode source code](https://github.com/FLZeng/Obfuscapk/tree/master/src/obfuscapk/obfuscators/dead_code)
+</details>
 
 <details><summary><b>DebugRemoval</b> [Code]</summary>
 
