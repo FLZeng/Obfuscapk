@@ -73,6 +73,14 @@ def get_cmd_args(args: list = None):
         help="Show obfuscation progress (as a progress bar)",
     )
     parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        default=False,
+        dest="force",
+        help="Overwrite existing decode output directory",
+    )
+    parser.add_argument(
         "--use-aapt2", action="store_true", help="Use aapt2 for rebuild app"
     )
     parser.add_argument(
@@ -182,6 +190,7 @@ def main():
         arguments.key_password,
         arguments.ignore_packages_file,
         arguments.use_aapt2,
+        arguments.force,
     )
 
 

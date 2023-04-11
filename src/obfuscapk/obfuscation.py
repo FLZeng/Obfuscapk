@@ -32,6 +32,7 @@ class Obfuscation(object):
         key_password: str = None,
         ignore_packages_file: str = None,
         use_aapt2: bool = False,
+        force: bool = False,
     ):
         self.logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ class Obfuscation(object):
         self.key_password: str = key_password
         self.ignore_packages_file: str = ignore_packages_file
         self.use_aapt2 = use_aapt2
+        self.force = force
         if apk_path.endswith("aab"):
             self.is_bundle = True
         else:
@@ -357,7 +359,7 @@ class Obfuscation(object):
                         self.apk_path, self._decoded_apk_path, force=False
                     )
                 else:
-                    apktool.decode(self.apk_path, self._decoded_apk_path, force=True)
+                    apktool.decode(self.apk_path, self._decoded_apk_path, force=self.force)
 
                 # Path to the decoded manifest file.
                 if self.is_bundle:

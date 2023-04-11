@@ -73,14 +73,11 @@ class Apktool(object):
         # Inform the user if an existing output directory is provided without the
         # "force" flag.
         if os.path.isdir(output_dir_path) and not force:
-            self.logger.error(
+            self.logger.warning(
                 'Output directory "{0}" already exists, use the "force" flag '
-                "to overwrite".format(output_dir_path)
+                "to overwrite, skip decode".format(output_dir_path)
             )
-            raise FileExistsError(
-                'Output directory "{0}" already exists, use the "force" flag '
-                "to overwrite".format(output_dir_path)
-            )
+            return
 
         decode_cmd: List[str] = [
             self.apktool_path,
