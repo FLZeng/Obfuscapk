@@ -127,6 +127,7 @@ def perform_obfuscation(
         ob.name: ob.plugin_object.obfuscate for ob in manager.get_all_obfuscators()
     }
     valid_obfuscators = manager.get_obfuscators_names()
+    trivial_obfuscators = manager.get_obfuscators_names_of_category('Trivial')
 
     # Check how many obfuscators in list will add new fields/methods.
     for obfuscator_name in obfuscator_list:
@@ -135,6 +136,8 @@ def perform_obfuscation(
             raise ValueError(
                 'There is no obfuscator named "{0}"'.format(obfuscator_name)
             )
+        if obfuscator_name not in trivial_obfuscators:
+            obfuscation.force = True
         if obfuscator_name_to_obfuscator_object[obfuscator_name].is_adding_fields:
             obfuscation.obfuscators_adding_fields += 1
         if obfuscator_name_to_obfuscator_object[obfuscator_name].is_adding_methods:

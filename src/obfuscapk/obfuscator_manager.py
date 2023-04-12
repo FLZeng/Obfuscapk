@@ -31,10 +31,22 @@ class ObfuscatorManager(object):
     def get_all_obfuscators(self):
         return self.manager.getAllPlugins()
 
+    def get_obfuscators_of_category(self, category_name):
+        return self.manager.getPluginsOfCategory(category_name)
+
     def get_obfuscators_names(self):
         return [
             ob.name
             for ob in sorted(
                 self.get_all_obfuscators(), key=lambda x: (x.category, x.name)
+            )
+        ]
+
+    def get_obfuscators_names_of_category(self, category_name):
+        return [
+            ob.name
+            for ob in sorted(
+                self.get_obfuscators_of_category(category_name),
+                key=lambda x: (x.category, x.name)
             )
         ]
