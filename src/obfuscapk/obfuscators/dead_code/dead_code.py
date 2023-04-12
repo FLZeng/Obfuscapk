@@ -15,13 +15,86 @@ class DeadCode(obfuscator_category.ICodeObfuscator):
         )
         super().__init__()
 
+    def count_regs(self, codes):
+        regv_count = 0
+        regp_count = 0
+        regv_pattern = re.compile(r"\W*v(\d+)\W+")
+        regp_pattern = re.compile(r"\W*p(\d+)\W+")
+
+        matches = regv_pattern.findall(codes)
+        for match in matches:
+            idx = int(match)
+            if (idx + 1) > regv_count:
+                regv_count = idx + 1
+
+        matches = regp_pattern.findall(codes)
+        for match in matches:
+            idx = int(match)
+            if (idx + 1) > regp_count:
+                regp_count = idx + 1
+
+        return regv_count, regp_count
+
+    def obfuscate_method_block(self, block):
+        method_block = []
+
+        pattern = re.compile(r"\s+(?P<op_code>\S+)")
+        op_codes = util.get_dead_code_valid_op_codes()
+
+        codes = ''.join(block)
+        regv_count, regp_count = self.count_regs(codes)
+
+        locals_count = 0
+        last_reg = 'v0'
+
+        for line in block:
+
+            # Skip empty line
+            if line.isspace():
+                # Append original instruction.
+                method_block.append(line)
+                continue
+
+            # Check if this line contains an .locals annotation
+            match = util.locals_pattern.match(line)
+            if match:
+                locals_count = int(match.group("local_count"))
+                if (
+                        locals_count <= 0
+                        or locals_count < regv_count
+                        or (locals_count + regp_count) >= 15
+                ):
+                    locals_count = 0
+                else:
+                    last_reg = 'v' + str(locals_count)
+                    line = line.replace(str(locals_count), str(locals_count + 1))
+
+            # Append original instruction.
+            method_block.append(line)
+
+            if locals_count <= 0:
+                continue
+
+            dice = util.get_random_int(0, 100)
+            const_val = dice % 2
+
+            # Check if this line contains an op code at the beginning
+            # of the string.
+            match = pattern.match(line)
+            if (dice > 33) and match:
+                op_code = match.group("op_code")
+                # If this is a valid op code, randomly insert a dead code
+                # after it.
+                if op_code in op_codes:
+                    method_block.append("\n    const/4 %s, %#x\n"
+                                        % (last_reg, const_val))
+
+        return method_block
+
     def obfuscate(self, obfuscation_info: Obfuscation):
         self.logger.info('Running "{0}" obfuscator'.format(self.__class__.__name__))
 
         try:
-            op_codes = util.get_dead_code_valid_op_codes()
-            pattern = re.compile(r"\s+(?P<op_code>\S+)")
-
             for smali_file in util.show_list_progress(
                 obfuscation_info.get_smali_files(),
                 interactive=obfuscation_info.interactive,
@@ -31,46 +104,36 @@ class DeadCode(obfuscator_category.ICodeObfuscator):
                     'Inserting dead codes in file "{0}"'.format(smali_file)
                 )
                 with util.inplace_edit_file(smali_file) as (in_file, out_file):
-                    locals_count = 0
-                    last_reg = 'v0'
+
+                    editing_method = False
+                    method_block = []
 
                     for line in in_file:
 
-                        # Skip empty line
-                        if line.isspace():
-                            # Print original instruction.
+                        if (
+                                line.startswith(".method ")
+                                and " abstract " not in line
+                                and " native " not in line
+                                and not editing_method
+                        ):
+                            # Entering method.
+                            editing_method = True
                             out_file.write(line)
-                            continue
 
-                        # Check if this line contains an .locals annotation
-                        match = util.locals_pattern.match(line)
-                        if match:
-                            locals_count = int(match.group("local_count"))
-                            if 0 < locals_count < 15:
-                                last_reg = 'v' + str(locals_count)
-                                line = line.replace(str(locals_count), str(locals_count+1))
-                            else:
-                                locals_count = 0
+                        elif line.startswith(".end method") and editing_method:
+                            # Exiting method.
+                            editing_method = False
+                            method_block = self.obfuscate_method_block(method_block)
+                            method_block.append(line)
+                            out_file.write(''.join(method_block))
+                            method_block = []
 
-                        # Print original instruction.
-                        out_file.write(line)
+                        elif editing_method:
+                            # Inside method.
+                            method_block.append(line)
 
-                        if locals_count <= 0:
-                            continue
-
-                        dice = util.get_random_int(0, 100)
-                        const_val = dice % 2
-
-                        # Check if this line contains an op code at the beginning
-                        # of the string.
-                        match = pattern.match(line)
-                        if (dice > 33) and match:
-                            op_code = match.group("op_code")
-                            # If this is a valid op code, randomly insert a dead code
-                            # after it.
-                            if op_code in op_codes:
-                                out_file.write("\n    const/4 %s, %#x"
-                                               % (last_reg, const_val))
+                        else:
+                            out_file.write(line)
 
         except Exception as e:
             self.logger.error(
